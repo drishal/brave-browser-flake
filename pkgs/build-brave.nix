@@ -201,15 +201,20 @@ stdenv.mkDerivation {
       cp -R usr/share $out
       cp -R opt/ $out/opt
 
-      # Determine the brave variant directory and binary wrapper
+      # Determine the brave variant directory and binary wrapper.
+      # Standard channels live at /opt/brave.com/brave-<channel>/brave-browser-<channel>;
+      # Origin uses /opt/brave.com/brave-origin-<channel>/brave-origin-<channel> (no brave-browser- prefix).
       if [ -d $out/opt/brave.com/brave-beta ]; then
         BRAVE_DIR="brave-beta"
         BRAVE_BINARY="brave-browser-beta"
       elif [ -d $out/opt/brave.com/brave-nightly ]; then
         BRAVE_DIR="brave-nightly"
         BRAVE_BINARY="brave-browser-nightly"
+      elif [ -d $out/opt/brave.com/brave-origin-nightly ]; then
+        BRAVE_DIR="brave-origin-nightly"
+        BRAVE_BINARY="brave-origin-nightly"
       else
-        echo "Error: Could not find brave-beta or brave-nightly directory"
+        echo "Error: Could not find a known brave variant directory under $out/opt/brave.com"
         exit 1
       fi
 
@@ -232,7 +237,8 @@ stdenv.mkDerivation {
       substituteInPlace $out/share/applications/*.desktop \
           --replace-warn /usr/bin/brave-browser-stable $out/bin/${pname} \
           --replace-warn /usr/bin/brave-browser-beta $out/bin/${pname} \
-          --replace-warn /usr/bin/brave-browser-nightly $out/bin/${pname}
+          --replace-warn /usr/bin/brave-browser-nightly $out/bin/${pname} \
+          --replace-warn /usr/bin/brave-origin-nightly $out/bin/${pname}
 
       # Add StartupWMClass for proper application identification in Wayland compositors
       for desktop in $out/share/applications/*.desktop; do

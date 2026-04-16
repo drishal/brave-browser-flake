@@ -25,6 +25,7 @@ jobs:
         browser:
           - brave-nightly
           - brave-beta
+          - brave-origin-nightly
     steps:
       - uses: actions/checkout@v4
 

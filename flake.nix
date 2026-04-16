@@ -12,6 +12,7 @@
       overlay = final: prev: {
         brave-nightly = final.callPackage ./pkgs/brave-nightly.nix {};
         brave-beta = final.callPackage ./pkgs/brave-beta.nix {};
+        brave-origin-nightly = final.callPackage ./pkgs/brave-origin-nightly.nix {};
       };
     in
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
@@ -25,6 +26,7 @@
         packages = {
           brave-nightly = pkgs.brave-nightly;
           brave-beta = pkgs.brave-beta;
+          brave-origin-nightly = pkgs.brave-origin-nightly;
           default = pkgs.brave-nightly;
         };
       }
