@@ -29,7 +29,7 @@ Add this repository to your `flake.nix` inputs:
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     
     # Add brave-browser-previews
-    brave-previews.url = "github:<username>/brave-browser-flake";
+    brave-previews.url = "github:drishal/brave-browser-flake";
     
     # Recommended: Follow your system's nixpkgs to avoid duplicate store paths
     brave-previews.inputs.nixpkgs.follows = "nixpkgs";
@@ -107,19 +107,19 @@ You can also run the browsers without installing them:
 
 ```bash
 # Run Nightly
-nix run github:<username>/brave-browser-flake#brave-nightly
+nix run github:drishal/brave-browser-flake#brave-nightly
 
 # Run Beta
-nix run github:<username>/brave-browser-flake#brave-beta
+nix run github:drishal/brave-browser-flake#brave-beta
 
 # Run Stable
-nix run github:<username>/brave-browser-flake#brave-stable
+nix run github:drishal/brave-browser-flake#brave-stable
 
 # Run Origin Nightly
-nix run github:<username>/brave-browser-flake#brave-origin-nightly
+nix run github:drishal/brave-browser-flake#brave-origin-nightly
 
 # Run Origin Beta
-nix run github:<username>/brave-browser-flake#brave-origin-beta
+nix run github:drishal/brave-browser-flake#brave-origin-beta
 ```
 
 ## How It Works
