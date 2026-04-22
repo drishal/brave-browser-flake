@@ -327,7 +327,7 @@ stdenv.mkDerivation {
     $out/bin/${pname} --version
   '';
 
-  passthru.updateScript = ./build.sh;
+  passthru.updateScript = ./update.sh;
 
   meta = {
     homepage = "https://brave.com/";

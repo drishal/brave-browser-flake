@@ -124,7 +124,7 @@ nix run github:<username>/brave-browser-flake#brave-origin-beta
 
 ## How It Works
 
-1.  **`build.sh`**: A script queries the Brave GitHub API for Nightly/Beta releases, reads Brave's apt repositories for Stable (from the stable repo) and Origin Beta (from the beta apt repo), and reads `brave-browser-apt-nightly.s3.brave.com`'s `Packages` index for Origin Nightly (which isn't published to GitHub releases).
+1.  **`update.sh`**: A script queries the Brave GitHub API for Nightly/Beta releases, reads Brave's apt repositories for Stable (from the stable repo) and Origin Beta (from the beta apt repo), and reads `brave-browser-apt-nightly.s3.brave.com`'s `Packages` index for Origin Nightly (which isn't published to GitHub releases).
 2.  **Prefetch**: It uses `nix-prefetch-url` to generate the correct SRI hash.
 3.  **Update**: It modifies the matching file under `pkgs/` with the new version and hash.
 4.  **CI/CD**: The `.github/workflows/update.yml` workflow runs this script daily, verifies the build using `nix build`, and commits the changes to the `master` branch.
