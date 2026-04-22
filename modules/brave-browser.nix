@@ -123,5 +123,17 @@ in
       pkgName = "brave-origin-nightly";
       policyDir = "brave/policies";
     })
+    (makeBraveModule {
+      name = "brave-stable";
+      description = "Brave Browser Stable";
+      pkgName = "brave-stable";
+      policyDir = "brave/policies";
+    })
+    (makeBraveModule {
+      name = "brave-origin-beta";
+      description = "Brave Origin Beta";
+      pkgName = "brave-origin-beta";
+      policyDir = "brave/policies";
+    })
   ];
 }
