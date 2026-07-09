@@ -21,7 +21,7 @@ jobs:
       - name: Run update script
         run: |
           chmod +x update.sh
-          ./update.sh --commit
+          ./update.sh
 
       - name: Verify build
         run: |
