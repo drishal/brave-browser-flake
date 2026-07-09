@@ -23,9 +23,9 @@ update_channel() {
   # (Brave sometimes publishes origin-only releases without brave-browser-* assets)
   local ASSET_PREFIX="brave-browser-${CHANNEL,,}_"
   RELEASE_DATA=$(curl -s "https://api.github.com/repos/brave/brave-browser/releases?per_page=100" | jq -r --arg channel "$CHANNEL" --arg prefix "$ASSET_PREFIX" \
-    'map(select(.name? and (.name | contains($channel)) and .assets? and (.assets | any(.name | startswith($prefix) and endswith("_amd64.deb"))))) 
-    | sort_by(.published_at) 
-    | reverse 
+    'map(select(.name? and (.name | contains($channel)) and .assets? and (.assets | any(.name | startswith($prefix) and endswith("_amd64.deb")))))
+    | sort_by(.published_at)
+    | reverse
     | .[0]
   ')
 
@@ -58,9 +58,10 @@ update_channel() {
   echo "Hash: $HASH"
 
   # Update the nix file
-  # We look for `version = "..."` and `hash = "..."`
+  # We look for `version = "..."`, `hash = "..."`, and `url = "..."`
   sed -i "s/version = \".*\";/version = \"$VERSION\";/" "$TARGET_FILE"
   sed -i "s/hash = \".*\";/hash = \"$HASH\";/" "$TARGET_FILE"
+  sed -i "s|url = \".*\";|url = \"$ASSET_URL\";|" "$TARGET_FILE"
 
   echo "Updated $TARGET_FILE with version $VERSION and hash $HASH"
 
@@ -108,6 +109,7 @@ update_stable_channel() {
 
   sed -i "s/version = \".*\";/version = \"$VERSION\";/" "$TARGET_FILE"
   sed -i "s/hash = \".*\";/hash = \"$HASH\";/" "$TARGET_FILE"
+  sed -i "s|url = \".*\";|url = \"$ASSET_URL\";|" "$TARGET_FILE"
 
   echo "Updated $TARGET_FILE with version $VERSION and hash $HASH"
 
@@ -158,6 +160,7 @@ update_apt_channel() {
 
   sed -i "s|version = \".*\";|version = \"$VERSION\";|" "$TARGET_FILE"
   sed -i "s|hash = \".*\";|hash = \"$HASH\";|" "$TARGET_FILE"
+  sed -i "s|url = \".*\";|url = \"$ASSET_URL\";|" "$TARGET_FILE"
 
   echo "Updated $TARGET_FILE with version $VERSION and hash $HASH"
 
