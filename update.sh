@@ -2,19 +2,51 @@
 
 set -e
 
+ALL_CHANNELS=(brave-nightly brave-beta brave-origin-nightly brave-stable brave-origin-beta)
+
+usage() {
+  cat <<EOF
+Usage: $0 [--commit] [channel...]
+
+Updates the version, hash and url of each brave package. With no channel
+arguments every channel is updated; naming one or more channels restricts
+the run to those, which lets CI update and verify them one at a time.
+
+Channels: ${ALL_CHANNELS[*]}
+
+  --commit   commit the touched pkgs/*.nix with a generated message
+EOF
+}
+
 COMMIT=false
+CHANNELS=()
 for arg in "$@"; do
   case $arg in
     --commit) COMMIT=true ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "Unknown option: $arg" >&2
+      usage >&2
+      exit 2
+      ;;
+    *) CHANNELS+=("$arg") ;;
   esac
 done
+
+if [ ${#CHANNELS[@]} -eq 0 ]; then
+  CHANNELS=("${ALL_CHANNELS[@]}")
+fi
 
 # Track updated versions for commit message
 declare -A UPDATED_VERSIONS
 
 update_channel() {
   local CHANNEL=$1
-  local TARGET_FILE=$2
+  local PKG_NAME=$2
+  local TARGET_FILE=$3
 
   echo "Updating $CHANNEL..."
 
@@ -53,7 +85,11 @@ update_channel() {
 
   # Prefetch the hash
   echo "Prefetching SRI hash..."
-  HASH=$(nix-prefetch-url "$ASSET_URL")
+  HASH=$(nix-prefetch-url "$ASSET_URL") || HASH=""
+  if [ -z "$HASH" ]; then
+    echo "Error: Could not prefetch $ASSET_URL"
+    return 1
+  fi
 
   echo "Hash: $HASH"
 
@@ -65,12 +101,13 @@ update_channel() {
 
   echo "Updated $TARGET_FILE with version $VERSION and hash $HASH"
 
-  UPDATED_VERSIONS["$CHANNEL"]="$VERSION"
+  UPDATED_VERSIONS["$PKG_NAME"]="$VERSION"
   echo "--------------------------------------------------"
 }
 
 update_stable_channel() {
-  local TARGET_FILE=$1
+  local PKG_NAME=$1
+  local TARGET_FILE=$2
 
   echo "Updating Brave Stable..."
 
@@ -103,7 +140,11 @@ update_stable_channel() {
   echo "Asset URL: $ASSET_URL"
 
   echo "Prefetching SRI hash..."
-  HASH=$(nix-prefetch-url "$ASSET_URL")
+  HASH=$(nix-prefetch-url "$ASSET_URL") || HASH=""
+  if [ -z "$HASH" ]; then
+    echo "Error: Could not prefetch $ASSET_URL"
+    return 1
+  fi
 
   echo "Hash: $HASH"
 
@@ -113,7 +154,7 @@ update_stable_channel() {
 
   echo "Updated $TARGET_FILE with version $VERSION and hash $HASH"
 
-  UPDATED_VERSIONS["stable"]="$VERSION"
+  UPDATED_VERSIONS["$PKG_NAME"]="$VERSION"
   echo "--------------------------------------------------"
 }
 
@@ -155,7 +196,11 @@ update_apt_channel() {
   echo "Asset URL: $ASSET_URL"
 
   echo "Prefetching SRI hash..."
-  HASH=$(nix-prefetch-url "$ASSET_URL")
+  HASH=$(nix-prefetch-url "$ASSET_URL") || HASH=""
+  if [ -z "$HASH" ]; then
+    echo "Error: Could not prefetch $ASSET_URL"
+    return 1
+  fi
   echo "Hash: $HASH"
 
   sed -i "s|version = \".*\";|version = \"$VERSION\";|" "$TARGET_FILE"
@@ -168,13 +213,34 @@ update_apt_channel() {
   echo "--------------------------------------------------"
 }
 
-update_channel "Nightly" "pkgs/brave-nightly.nix"
-update_channel "Beta" "pkgs/brave-beta.nix"
-update_apt_channel "brave-browser-apt-nightly.s3.brave.com" "brave-origin-nightly" "pkgs/brave-origin-nightly.nix"
-update_stable_channel "pkgs/brave-stable.nix"
-update_apt_channel "brave-browser-apt-beta.s3.brave.com" "brave-origin-beta" "pkgs/brave-origin-beta.nix"
+update_one() {
+  case $1 in
+    brave-nightly) update_channel "Nightly" "brave-nightly" "pkgs/brave-nightly.nix" ;;
+    brave-beta) update_channel "Beta" "brave-beta" "pkgs/brave-beta.nix" ;;
+    brave-stable) update_stable_channel "brave-stable" "pkgs/brave-stable.nix" ;;
+    brave-origin-nightly)
+      update_apt_channel "brave-browser-apt-nightly.s3.brave.com" \
+        "brave-origin-nightly" "pkgs/brave-origin-nightly.nix"
+      ;;
+    brave-origin-beta)
+      update_apt_channel "brave-browser-apt-beta.s3.brave.com" \
+        "brave-origin-beta" "pkgs/brave-origin-beta.nix"
+      ;;
+    *)
+      echo "Error: unknown channel '$1' (expected one of: ${ALL_CHANNELS[*]})" >&2
+      return 1
+      ;;
+  esac
+}
 
-if [ "$COMMIT" = true ]; then
+# A channel that fails shouldn't stop the others — Brave occasionally publishes
+# a broken or incomplete release, and one bad channel used to freeze all of them.
+FAILED=()
+for channel in "${CHANNELS[@]}"; do
+  update_one "$channel" || FAILED+=("$channel")
+done
+
+if [ "$COMMIT" = true ] && [ ${#UPDATED_VERSIONS[@]} -gt 0 ]; then
   # Build commit message from updated versions
   MSG="chore: update brave versions"
   for channel in "${!UPDATED_VERSIONS[@]}"; do
@@ -184,4 +250,9 @@ if [ "$COMMIT" = true ]; then
   git add pkgs/*.nix
   git commit -m "$MSG"
   echo "Committed: $MSG"
+fi
+
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo "Failed to update: ${FAILED[*]}" >&2
+  exit 1
 fi

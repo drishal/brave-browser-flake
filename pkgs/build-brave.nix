@@ -209,12 +209,25 @@ stdenv.mkDerivation {
         exit 1
       fi
 
-      # Standard channels use brave-browser-<channel> as the binary name;
-      # origin builds use brave-origin-<channel>.
-      if [ -f "$out/opt/brave.com/$BRAVE_DIR/brave-browser-''${BRAVE_DIR##brave-}" ]; then
-        BRAVE_BINARY="brave-browser-''${BRAVE_DIR##brave-}"
-      else
-        BRAVE_BINARY="$BRAVE_DIR"
+      # The launcher is a small shell wrapper sitting next to the `brave` ELF.
+      # Its name varies by channel:
+      #   nightly/beta -> brave-browser-<channel>   (dir brave-<channel>)
+      #   stable       -> brave-browser             (dir brave)
+      #   origin       -> brave-origin-<channel>    (dir brave-origin-<channel>)
+      # Require a shebang so we never pick the ELF — substituteInPlace chokes
+      # on null bytes, which is how the stable channel used to fail.
+      BRAVE_BINARY=""
+      for candidate in "brave-browser-''${BRAVE_DIR#brave-}" brave-browser "$BRAVE_DIR"; do
+        wrapper="$out/opt/brave.com/$BRAVE_DIR/$candidate"
+        if [ -f "$wrapper" ] && [ "$(head -c 2 "$wrapper")" = '#!' ]; then
+          BRAVE_BINARY="$candidate"
+          break
+        fi
+      done
+      if [ -z "$BRAVE_BINARY" ]; then
+        echo "Error: no launcher script found in $out/opt/brave.com/$BRAVE_DIR"
+        ls -la "$out/opt/brave.com/$BRAVE_DIR"
+        exit 1
       fi
 
       export BINARYWRAPPER=$out/opt/brave.com/$BRAVE_DIR/$BRAVE_BINARY
