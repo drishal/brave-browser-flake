@@ -2,7 +2,7 @@ name: Update Brave Channels
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Run daily at 4:00 UTC
+    - cron: '30 5 * * *' # Run daily at 5:30 UTC — after Brave beta's ~05:27 weekday publish
   workflow_dispatch: # Allow manual trigger
 
 permissions:
