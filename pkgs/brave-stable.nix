@@ -1,10 +1,10 @@
 { callPackage, fetchurl }:
 let
-  version = "1.100.57";
-  hash = "1sfh2xada7cnyp3j00d7qk47zdzfz841qnadsxq6cmx2sqq216in";
+  version = "1.100.58";
+  hash = "19any5rx19yzhiarfj95w5yfbjq2wimq6k1jfwy38q7x9rk1x79d";
 in
 callPackage ./build-brave.nix { } {
   pname = "brave-stable";
   inherit version hash;
-  url = "https://github.com/brave/brave-browser/releases/download/v1.100.57/brave-browser_1.100.57_amd64.deb";
+  url = "https://github.com/brave/brave-browser/releases/download/v1.100.58/brave-browser_1.100.58_amd64.deb";
 }

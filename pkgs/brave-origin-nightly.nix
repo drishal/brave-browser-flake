@@ -1,10 +1,10 @@
 { callPackage, fetchurl }:
 let
-  version = "1.102.10";
-  hash = "0lyl7xkfpn8q2qm086x1cjzl84azr4x9pwn4diishifzrxagnx0x";
+  version = "1.102.18";
+  hash = "13k2icjqw61n6i89awpxqhjhrb0xyan3pb8sxnkg0wx4kxbxg36c";
 in
 callPackage ./build-brave.nix { } {
   pname = "brave-origin-nightly";
   inherit version hash;
-  url = "https://brave-browser-apt-nightly.s3.brave.com/pool/main/b/brave-origin-nightly/brave-origin-nightly_1.102.10_amd64.deb";
+  url = "https://brave-browser-apt-nightly.s3.brave.com/pool/main/b/brave-origin-nightly/brave-origin-nightly_1.102.18_amd64.deb";
 }
